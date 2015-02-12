@@ -69,9 +69,11 @@ module OmniAuth
         error = request.params['error_reason'] || request.params['error']
         if error
           fail!(error, CallbackError.new(request.params['error'], request.params['error_description'] || request.params['error_reason'], request.params['error_uri']))
-        elsif !options.provider_ignores_state && (request.params['state'].to_s.empty? || request.params['state'] != session.delete('omniauth.state'))
+        elsif !options.provider_ignores_state && (request.params['state'].to_s.empty? || request.params['state'] != session_state)
+          puts "Request state: #{request.params['state']} Session State
           fail!(:csrf_detected, CallbackError.new(:csrf_detected, 'CSRF detected'))
         else
+          puts "Greenhouse Omniauth: Everything OK!"
           self.access_token = build_access_token
           self.access_token = access_token.refresh! if access_token.expired?
           super
@@ -87,6 +89,10 @@ module OmniAuth
       end
 
     protected
+   
+      def session_state
+        session.delete('omniauth.state')
+      end
 
       def build_access_token
         verifier = request.params['code']
